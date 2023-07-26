@@ -1,3 +1,8 @@
+/*Tarea 4 (Grupal)
+ * Integrantes: Joselyn Moncayo, Kenlly Chacon
+ */
+
+
 #include <iostream>
 #include <fmt/core.h>
 #include <fmt/color.h>
@@ -60,26 +65,32 @@ int main(int argc, char **argv) {
 
     int rank_id;
     int nprocs;
+    long block_size;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank_id);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+//Leer archivo externo en el rank 0  y calcula el block_size ******************************************************************
     if (rank_id == 0) {
         std::string path = "/workspace/lab02mpi/cipher_text.txt";
         cipher_text = read_file(path);
+        block_size = LLONG_MAX / nprocs;
 
     }
+//Enviar cipher_text a todos los ranks desde el rank 0  ****************************************************
 
     //Enviar el tamaño del texto a todos los procesos para evitar MPI_ERR_TRUNCATE
     int cipher_text_size = cipher_text.size();
     MPI_Bcast(&cipher_text_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
     cipher_text.resize(cipher_text_size);
 
-    //para enviar de forma correcta un std::string con MPI, se necesita un puntero al primer
+    //Para enviar de forma correcta un std::string con MPI, se necesita un puntero al primer
     //caracter de la secuencia, por eso enviamos cipher_text[0]
     MPI_Bcast(&cipher_text[0], cipher_text_size, MPI_CHAR, 0, MPI_COMM_WORLD);
     //fmt::println("texto: {}", cipher_text);
-    long block_size = LLONG_MAX / nprocs;
+
+
+//Enviar block size a todos los ranks desde el rank0*********************************************************
     MPI_Bcast(&block_size, 1, MPI_LONG, 0, MPI_COMM_WORLD);
 
 
