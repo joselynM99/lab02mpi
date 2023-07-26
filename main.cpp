@@ -65,27 +65,22 @@ int main(int argc, char **argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     if (rank_id == 0) {
-        std::string file_path = "/workspace/lab02mpi/cipher_text.txt";
-        cipher_text = read_file(file_path);
+        std::string path = "/workspace/lab02mpi/cipher_text.txt";
+        cipher_text = read_file(path);
 
-        fmt::println("texto: {}", cipher_text);
     }
 
+    //Enviar el tamaño del texto a todos los procesos para evitar MPI_ERR_TRUNCATE
     int cipher_text_size = cipher_text.size();
     MPI_Bcast(&cipher_text_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-    // Resize cipher_text for all ranks
     cipher_text.resize(cipher_text_size);
 
-    // Broadcast the content of cipher_text to all ranks
+    //para enviar de forma correcta un std::string con MPI, se necesita un puntero al primer
+    //caracter de la secuencia, por eso enviamos cipher_text[0]
     MPI_Bcast(&cipher_text[0], cipher_text_size, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    // Calculate the block_size for all ranks
+    //fmt::println("texto: {}", cipher_text);
     long block_size = LLONG_MAX / nprocs;
-
-    // Broadcast the block_size from RANK_0 to all ranks
     MPI_Bcast(&block_size, 1, MPI_LONG, 0, MPI_COMM_WORLD);
-
 
 
     long start_index = rank_id * block_size;
@@ -148,8 +143,6 @@ int main(int argc, char **argv) {
         char ffkey[9];
         std::memcpy(ffkey, (char *) &key_found, 8);
         ffkey[8] = 0;
-
-        //fmt::print(fg(fmt::color::green), "FOUND: rank_id={}\n", st.MPI_SOURCE);
         fmt::print(fg(fmt::color::green), "****** key found: {}\n", ffkey);
         fmt::print(fg(fmt::color::green), "****** org text : {}\n", (char *) out_buffer.data());
     }
